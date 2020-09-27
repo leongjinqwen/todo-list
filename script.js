@@ -69,7 +69,7 @@ const deleteTask = (idx) => {
 let userInput = document.querySelector('#task-input')
 
 userInput.addEventListener('keypress', function(e){
-    // if user press enter, then just create new item and userinput value is not empty
+    // if user press enter and userinput value is not empty, then create new item
     if (userInput.value !== '' && e.key === 'Enter') {
         let newList = [
             ...todoList, // clone the original list

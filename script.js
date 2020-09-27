@@ -1,47 +1,86 @@
-let userInput = document.getElementById('todo-input')
-let container = document.querySelector('#container')
-let todos;
+// save each todo item as an object that have two keys, 
+// task's description and task's status (whether the task done or not)
+// the todolist should be an array of objects
+let todoList = []
 
-userInput.addEventListener('keypress',function(e){
-    if  (userInput.value !== '' && e.key === 'Enter'){
-        todos = JSON.parse(localStorage.getItem('myList'))
-        let newList = [...todos, {
-            task: userInput.value,
-            done: false //default status
-        }]
-        localStorage.setItem('myList', JSON.stringify(newList))
-        userInput.value = ''
-        renderToDo()
+// render the todolist in container
+let container = document.querySelector('#container')
+
+const renderTodos = () => {
+    // code will break if can't find any item with key todos in localStorage
+    // so need to set the key with empty array if key not found
+    if ( !JSON.parse(localStorage.getItem('todos')) ) {
+        localStorage.setItem('todos', JSON.stringify([]))
+    }
+    // get todolist from localStorage 
+    todoList = JSON.parse(localStorage.getItem('todos'))
+    container.innerHTML = '' // clear the container before render newlist
+    for(let i =0; i<todoList.length; i++){  // loop throught the list
+        // create new element for each item
+        let newItem = document.createElement('div')
+        newItem.classList.add('panel-block')
+        // add mark done and delete button in newItem 
+        // render depend on the todo item status
+        newItem.innerHTML = todoList[i].status ? // if status is true
+            `
+                <div class="done">${todoList[i].task}</div>
+                <div>
+                    <button class="button is-small is-rounded is-primary" onclick=markDone(${i}) >Undone</button>
+                    <button class="button is-small is-rounded is-danger" onclick=deleteTask(${i})>Delete</button>
+                </div>
+            `
+            :
+            `
+                <div>${todoList[i].task}</div>
+                <div>
+                    <button class="button is-small is-rounded is-info" onclick=markDone(${i}) >Done</button>
+                    <button class="button is-small is-rounded is-danger" onclick=deleteTask(${i})>Delete</button>
+                </div>
+            `
+        container.appendChild(newItem)
+    }
+}
+renderTodos()
+
+// when done button clicked, change the todo item status to true
+const markDone = (idx) => {
+    // pass in index number in array to identify the item
+    let updatedList = todoList.map((todo, index) =>{
+        if (idx === index){
+            return  {
+                ...todo, //clone the item
+                status: !todo.status // flip the original status
+            }
+        }
+        return todo
+    })
+    localStorage.setItem('todos', JSON.stringify(updatedList))
+    renderTodos()
+}
+
+// remove from list when delete button onclick
+const deleteTask = (idx) => {
+    let deletedList = todoList.filter((todo,index) => index !== idx) // only return if index not equal to idx
+    localStorage.setItem('todos', JSON.stringify(deletedList))
+    renderTodos() // render the whole list again
+}
+
+// create new todo item when user press enter in input field
+let userInput = document.querySelector('#task-input')
+
+userInput.addEventListener('keypress', function(e){
+    // if user press enter, then just create new item and userinput value is not empty
+    if (userInput.value !== '' && e.key === 'Enter') {
+        let newList = [
+            ...todoList, // clone the original list
+            // add new task object
+            {
+                task: userInput.value,
+                status: false //default set as false
+            }
+        ]
+        localStorage.setItem('todos', JSON.stringify(newList)) // set item in localStorage
+        userInput.value = '' // clear the input after getting the value
+        renderTodos() // render the whole list again
     }
 })
-const renderToDo = () => {
-    todos = localStorage.getItem('myList') ? JSON.parse(localStorage.getItem('myList')) : localStorage.setItem('myList', JSON.stringify([]))
-    container.innerHTML = ''
-    for (let i = 0; i < todos.length; i++) {
-        let newTask = document.createElement('div')
-        newTask.classList.add('panel-block')
-        newTask.innerHTML = todos[i].done 
-        ? `<div class="done">${todos[i].task}</div>
-            <div>
-                <button onclick=markDone(${i}) class="button is-rounded is-small is-info">Undone</button>
-                <button onclick=deleteTask(${i}) class="button is-rounded is-small is-danger">Delete</button>
-            </div>` 
-        : `<div>${todos[i].task}</div>
-            <div>
-                <button onclick=markDone(${i}) class="button is-rounded is-small is-success">Done</button>
-                <button onclick=deleteTask(${i}) class="button is-rounded is-small is-danger">Delete</button>
-            </div>`
-        container.appendChild(newTask)
-    }
-}
-const markDone = (idx) => {
-    let newList = todos.map((todo,index)=> index == idx ? {...todo, done: !todo.done} : todo)
-    localStorage.setItem('myList', JSON.stringify(newList))
-    renderToDo()
-}
-const deleteTask = (idx) => {
-    let newList = todos.filter((todo,index)=> index!=idx )
-    localStorage.setItem('myList', JSON.stringify(newList))
-    renderToDo()
-}
-renderToDo()
